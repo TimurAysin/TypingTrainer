@@ -59,8 +59,8 @@ class StatisticsButton(Button):
         self.l.destroy()
         self.s.destroy()        
 
-        self.l = Label(self.window, text="Accuracy: " + str(accuracy))
-        self.s = Label(self.window, text="Speed: " + str(speed))
+        self.l = Label(self.window, text="Accuracy: " + str(accuracy) + "%")
+        self.s = Label(self.window, text="Speed: " + str(speed) + "sym/minute")
 
         self.l.pack()
         self.s.pack()
