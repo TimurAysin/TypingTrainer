@@ -124,8 +124,7 @@ class Window(Tk):
         self.types = 0
         self.correct = 0
         self.typed = 0
-        self.textEntry = TextEntry(self.mainFrame)
-        self.textEntry.focus_set()
+        self.textEntry = TextEntry(self.mainFrame)        
 
         self.loadText()
 
@@ -139,13 +138,23 @@ class Window(Tk):
         # Set bindings
         self.textEntry.bind('<Key>', self.overrideInput)
         self.textEntry.bind('<KeyRelease>', self.handleType)
-        self.textEntry.bind('<Return>', self.handleEnter)
+        self.textEntry.bind('<Return>', self.handleEnter)        
+        self.textEntry.bind('<Button-1>', self.handleMouseInput)
+        self.textEntry.bind('<ButtonRelease-1>', self.handleMouseInput)
+        self.textEntry.bind('<B1-Motion>', self.handleMouseInput)
+        self.textEntry.bind('<Double-Button-1>', self.handleMouseInput)
+        
 
         # Set variables
         self.forbiddenEntry = False
         self.ind = 0
 
         self.start = datetime.datetime.now()
+        self.textEntry.focus_set()
+
+    def handleMouseInput(self, *args):
+        self.textEntry.focus_set()    
+        return "break"
 
     def loadText(self):
         if (self.btn.filename == ""):
