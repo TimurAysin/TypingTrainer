@@ -38,6 +38,7 @@ class StatisticsButton(Button):
         self.labelInfo = "Hello another window!"
         self.bind('<Button-1>', self.showStatistics)
         self.active = False
+        self.statisticsFile = "./statistics.txt"
 
     def showStatistics(self, event):
         self.active = True
@@ -55,17 +56,17 @@ class StatisticsButton(Button):
         self.window.mainloop()
 
     def update(self):
-        file = open("./statistics.txt", "r")
+        file = open(self.statisticsFile, "r")
         lines = file.readlines()
 
-        accuracy = round(float(lines[0]))
-        speed = round(float(lines[1]))
+        accuracy = lines[0]
+        speed = lines[1]
 
         self.l.destroy()
         self.s.destroy()
 
-        self.l = Label(self.window, text="Accuracy: " + str(accuracy) + "%")
-        self.s = Label(self.window, text="Speed: " + str(speed) + "sym/minute")
+        self.l = Label(self.window, text="Accuracy: " + accuracy + "%")
+        self.s = Label(self.window, text="Speed: " + speed + "sym/minute")
 
         self.l.pack()
         self.s.pack()
@@ -78,7 +79,7 @@ class MainFrame(Frame):
         self.pack_propagate(0)
 
 
-class selectTextFile(Button):
+class SelectTextFile(Button):
     def __init__(self, window):
         super().__init__(window, text="Click to select file")
         self.pack(side=TOP, pady=10)
@@ -104,6 +105,7 @@ class Window(Tk):
         self.resizable(FALSE, FALSE)
         self.title("Typing trainer")
         self.menu()
+        self.statisticsFile = "./statistics.txt"
 
     def menu(self, s="Welcome! Press any key to start..."):
         self.header = Header(self)
@@ -112,7 +114,7 @@ class Window(Tk):
         self.label.pack(padx=10, pady=20)
         self.frame.bind('<Key>', self.startGame)
         self.frame.focus_set()
-        self.btn = selectTextFile(self.frame)
+        self.btn = SelectTextFile(self.frame)
 
     def startGame(self, event):
         self.header.destroy()
@@ -124,7 +126,7 @@ class Window(Tk):
         self.types = 0
         self.correct = 0
         self.typed = 0
-        self.textEntry = TextEntry(self.mainFrame)        
+        self.textEntry = TextEntry(self.mainFrame)
 
         self.loadText()
 
@@ -138,12 +140,11 @@ class Window(Tk):
         # Set bindings
         self.textEntry.bind('<Key>', self.overrideInput)
         self.textEntry.bind('<KeyRelease>', self.handleType)
-        self.textEntry.bind('<Return>', self.handleEnter)        
+        self.textEntry.bind('<Return>', self.handleEnter)
         self.textEntry.bind('<Button-1>', self.handleMouseInput)
         self.textEntry.bind('<ButtonRelease-1>', self.handleMouseInput)
         self.textEntry.bind('<B1-Motion>', self.handleMouseInput)
         self.textEntry.bind('<Double-Button-1>', self.handleMouseInput)
-        
 
         # Set variables
         self.forbiddenEntry = False
@@ -153,11 +154,11 @@ class Window(Tk):
         self.textEntry.focus_set()
 
     def handleMouseInput(self, *args):
-        self.textEntry.focus_set()    
+        self.textEntry.focus_set()
         return "break"
 
     def loadText(self):
-        if (self.btn.filename == ""):
+        if self.btn.filename == "":
             filename = filedialog.askopenfilename(
                 initialdir="./texts", title="Select file",
                 filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
@@ -177,18 +178,21 @@ class Window(Tk):
         self.types += 1
         self.typed += 1
 
-        if (self.typed >= 5):
+        if self.typed >= 5:
             self.typed = 0
             self.writeStatistic()
 
-        if (self.ind == len(self.lines)):
+        if self.ind == len(self.lines):
             self.endGame()
 
-        if (key not in LETTERS):
+        sym = self.lines[self.ind]
+        nextSym = self.lines[self.ind] + \
+            self.lines[(self.ind+1) % len(self.lines)]
+
+        if key not in LETTERS:
             return "break"
         else:
-            if (key == self.lines[self.ind] or key == self.lines[self.ind] +
-                self.lines[(self.ind+1) % len(self.lines)]):
+            if key == sym or key == nextSym:
                 self.moveCursor()
                 self.ind += 1
                 return "break"
@@ -200,18 +204,21 @@ class Window(Tk):
         key = '\n'
         self.types += 1
 
-        if (self.ind == len(self.lines)):
+        if self.ind == len(self.lines):
             self.endGame()
 
-        if (self.typed >= 5):
+        if self.typed >= 5:
             self.typed = 0
             self.writeStatistic()
 
-        if (key not in LETTERS):
+        sym = self.lines[self.ind]
+        nextSym = self.lines[self.ind] + \
+            self.lines[(self.ind+1) % len(self.lines)]
+
+        if key not in LETTERS:
             return "break"
         else:
-            if (key == self.lines[self.ind] or key == self.lines[self.ind] + 
-                self.lines[(self.ind+1) % len(self.lines)]):
+            if key == sym or key == nextSym:
                 self.moveCursor(up=True)
                 print(key)
                 self.ind += 1
@@ -228,7 +235,7 @@ class Window(Tk):
 
         y = int(sp[0])
         x = int(sp[1])
-        if (not up):
+        if not up:
             self.textEntry.mark_set("insert", "%d.%d" % (y, x+1))
         else:
             self.textEntry.mark_set("insert", "%d.%d" % (y+1, 0))
@@ -254,21 +261,22 @@ class Window(Tk):
             self.mainFrame.configure(bg="red")
 
     def endGame(self):
-        if (self.header.stBtn.active):
+        if self.header.stBtn.active:
             self.header.stBtn.window.destroy()
         self.header.destroy()
         self.mainFrame.destroy()
         self.menu("Great job! If you want to do it again, press any key...")
 
     def writeStatistic(self):
-        file = open("./statistics.txt", "w")
-        file.writelines(str(self.correct / self.types * 100) + "\n")
-        speed = 5 / ((datetime.datetime.now() - self.start).total_seconds())
+        file = open(self.statisticsFile, "w")
+        file.writelines(str(round(self.correct / self.types * 100)) + "\n")
+        speed = round(
+            5 / ((datetime.datetime.now() - self.start).total_seconds()))
         file.writelines(str(speed * 60) + "\n")
         self.start = datetime.datetime.now()
         file.close()
 
-        if (self.header.stBtn.active):
+        if self.header.stBtn.active:
             self.header.stBtn.update()
 
 
