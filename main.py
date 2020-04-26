@@ -45,7 +45,7 @@ class SpeedButton(Button):
         self.pack(side=TOP, pady=10)
         self.labelInfo = "Hello another window!"
         self.bind('<Button-1>', self.showInfo)
-        self.active = False        
+        self.active = False
 
     def showInfo(self, event):
         self.active = True
@@ -104,18 +104,19 @@ class StatisticsButton(Button):
         super().__init__(window, text=textS)
         self.pack(side=TOP, pady=10)
         self.labelInfo = "Hello another window!"
-        self.bind('<Button-1>', self.showInfo)        
+        self.bind('<Button-1>', self.showInfo)
         self.statisticsFile = "./statistics.txt"
         self.lines = ""
 
     def showInfo(self, event):
         self.root = Tk()
-        self.root.title("Statistics")        
+        self.root.title("Statistics")
         self.root.resizable(FALSE, FALSE)
 
         container = ttk.Frame(self.root)
         canvas = Canvas(container, width=200)
-        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollbar = ttk.Scrollbar(
+            container, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
 
         scrollable_frame.bind(
@@ -128,7 +129,7 @@ class StatisticsButton(Button):
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.readFile()          
+        self.readFile()
 
         self.l = Label(scrollable_frame, text=self.lines)
         self.l.grid(row=0, column=0, columnspan=100)
@@ -153,6 +154,7 @@ class StatisticsButton(Button):
             self.lines += s
             ind += 1
             line = file.readline()
+
 
 class Window(Tk):
     def __init__(self):
@@ -331,7 +333,8 @@ class Window(Tk):
     def writeStatistics(self):
         file = open(self.statisticsFile, "a+")
         self.speed = round(
-            self.types * 60 / ((datetime.datetime.now() - self.start).total_seconds()))
+            self.types * 60 /
+            ((datetime.datetime.now() - self.start).total_seconds()))
         self.accuracy = round(self.correct / self.types * 100)
         file.write(str(self.accuracy) + "," + str(self.speed) + "\n")
         file.close()
@@ -342,7 +345,8 @@ class Window(Tk):
     def updateStatistics(self):
         if (self.header.speedButton.active):
             self.speed = round(
-                self.types * 60 / ((datetime.datetime.now() - self.start).total_seconds()))
+                self.types * 60 /
+                ((datetime.datetime.now() - self.start).total_seconds()))
             self.accuracy = round(self.correct / self.types * 100)
             self.header.speedButton.update(str(self.accuracy), str(self.speed))
             self.timer = datetime.datetime.now()
