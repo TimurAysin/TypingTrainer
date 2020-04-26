@@ -23,27 +23,34 @@ class StartingFrame(Frame):
         self.pack(side=location, expand=True, fill=BOTH)
 
 
-class Header(Frame):
+class MenuHeader(Frame):
     def __init__(self, window):
         super().__init__(window, height=50, width=700)
-        self.stBtn = StatisticsButton(self, "Show Statistics")
+        self.speedButton = StatisticsButton(self, "Show Info")
         self.pack(side=TOP)
         self.pack_propagate(0)
 
 
-class StatisticsButton(Button):
+class GameHeader(Frame):
+    def __init__(self, window):
+        super().__init__(window, height=50, width=700)
+        self.speedButton = SpeedButton(self, "Show Speed")
+        self.pack(side=TOP)
+        self.pack_propagate(0)
+
+
+class SpeedButton(Button):
     def __init__(self, window, textS):
         super().__init__(window, text=textS)
         self.pack(side=TOP, pady=10)
         self.labelInfo = "Hello another window!"
-        self.bind('<Button-1>', self.showStatistics)
-        self.active = False
-        self.statisticsFile = "./statistics.txt"
+        self.bind('<Button-1>', self.showInfo)
+        self.active = False        
 
-    def showStatistics(self, event):
+    def showInfo(self, event):
         self.active = True
         self.window = Tk()
-        self.window.title("Statistics")
+        self.window.title("Speed")
         self.window.geometry("300x200")
         self.window.resizable(FALSE, FALSE)
 
@@ -55,13 +62,7 @@ class StatisticsButton(Button):
         self.window.pack_propagate(0)
         self.window.mainloop()
 
-    def update(self):
-        file = open(self.statisticsFile, "r")
-        lines = file.readlines()
-
-        accuracy = lines[0]
-        speed = lines[1]
-
+    def update(self, accuracy="", speed=""):
         self.l.destroy()
         self.s.destroy()
 
@@ -98,6 +99,61 @@ class TextEntry(Text):
         self.pack(side=TOP, pady=30)
 
 
+class StatisticsButton(Button):
+    def __init__(self, window, textS):
+        super().__init__(window, text=textS)
+        self.pack(side=TOP, pady=10)
+        self.labelInfo = "Hello another window!"
+        self.bind('<Button-1>', self.showInfo)        
+        self.statisticsFile = "./statistics.txt"
+        self.lines = ""
+
+    def showInfo(self, event):
+        self.root = Tk()
+        self.root.title("Statistics")        
+        self.root.resizable(FALSE, FALSE)
+
+        container = ttk.Frame(self.root)
+        canvas = Canvas(container, width=200)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        self.readFile()          
+
+        self.l = Label(scrollable_frame, text=self.lines)
+        self.l.grid(row=0, column=0, columnspan=100)
+
+        self.l.pack(fill="both", expand=True)
+        container.pack()
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        self.root.mainloop()
+
+    def readFile(self):
+        file = open(self.statisticsFile, "r")
+        line = file.readline()
+
+        ind = 1
+
+        while line:
+            s = ""
+            s += "Game: " + str(ind) + "\n"
+            s += "Accuracy: " + line.split(",")[0].strip() + "%\n"
+            s += "Speed: " + line.split(",")[1].strip() + "sym/minute\n\n"
+            self.lines += s
+            ind += 1
+            line = file.readline()
+
 class Window(Tk):
     def __init__(self):
         super().__init__()
@@ -108,7 +164,7 @@ class Window(Tk):
         self.statisticsFile = "./statistics.txt"
 
     def menu(self, s="Welcome! Press any key to start..."):
-        self.header = Header(self)
+        self.header = MenuHeader(self)
         self.frame = StartingFrame(self, TOP)
         self.label = Label(self.frame, text=s, width="200")
         self.label.pack(padx=10, pady=20)
@@ -119,13 +175,13 @@ class Window(Tk):
     def startGame(self, event):
         self.header.destroy()
         self.frame.destroy()
-        self.header = Header(self)
+        self.header = GameHeader(self)
+        self.updateTimeInSeconds = 2
 
         self.mainFrame = MainFrame(self)
 
         self.types = 0
         self.correct = 0
-        self.typed = 0
         self.textEntry = TextEntry(self.mainFrame)
 
         self.loadText()
@@ -149,8 +205,9 @@ class Window(Tk):
         # Set variables
         self.forbiddenEntry = False
         self.ind = 0
-
+        self.timer = datetime.datetime.now()
         self.start = datetime.datetime.now()
+
         self.textEntry.focus_set()
 
     def handleMouseInput(self, *args):
@@ -176,14 +233,15 @@ class Window(Tk):
     def handleType(self, event):
         key = event.char
         self.types += 1
-        self.typed += 1
 
-        if self.typed >= 5:
-            self.typed = 0
-            self.writeStatistic()
+        now = datetime.datetime.now()
 
-        if self.ind == len(self.lines):
+        if (now - self.timer).total_seconds() >= self.updateTimeInSeconds:
+            self.updateStatistics()
+
+        if self.ind >= len(self.lines):
             self.endGame()
+            return "break"
 
         sym = self.lines[self.ind]
         nextSym = self.lines[self.ind] + \
@@ -204,12 +262,14 @@ class Window(Tk):
         key = '\n'
         self.types += 1
 
-        if self.ind == len(self.lines):
+        if self.ind >= len(self.lines):
             self.endGame()
+            return "break"
 
-        if self.typed >= 5:
-            self.typed = 0
-            self.writeStatistic()
+        now = datetime.datetime.now()
+
+        if (now - self.timer).total_seconds() >= self.updateTimeInSeconds:
+            self.updateStatistics()
 
         sym = self.lines[self.ind]
         nextSym = self.lines[self.ind] + \
@@ -261,23 +321,31 @@ class Window(Tk):
             self.mainFrame.configure(bg="red")
 
     def endGame(self):
-        if self.header.stBtn.active:
-            self.header.stBtn.window.destroy()
+        self.writeStatistics()
+        if self.header.speedButton.active:
+            self.header.speedButton.window.destroy()
         self.header.destroy()
         self.mainFrame.destroy()
         self.menu("Great job! If you want to do it again, press any key...")
 
-    def writeStatistic(self):
-        file = open(self.statisticsFile, "w")
-        file.writelines(str(round(self.correct / self.types * 100)) + "\n")
-        speed = round(
-            5 / ((datetime.datetime.now() - self.start).total_seconds()))
-        file.writelines(str(speed * 60) + "\n")
-        self.start = datetime.datetime.now()
+    def writeStatistics(self):
+        file = open(self.statisticsFile, "a+")
+        self.speed = round(
+            self.types * 60 / ((datetime.datetime.now() - self.start).total_seconds()))
+        self.accuracy = round(self.correct / self.types * 100)
+        file.write(str(self.accuracy) + "," + str(self.speed) + "\n")
         file.close()
 
-        if self.header.stBtn.active:
-            self.header.stBtn.update()
+        if self.header.speedButton.active:
+            self.header.speedButton.update()
+
+    def updateStatistics(self):
+        if (self.header.speedButton.active):
+            self.speed = round(
+                self.types * 60 / ((datetime.datetime.now() - self.start).total_seconds()))
+            self.accuracy = round(self.correct / self.types * 100)
+            self.header.speedButton.update(str(self.accuracy), str(self.speed))
+            self.timer = datetime.datetime.now()
 
 
 root = Window()
