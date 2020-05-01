@@ -1,6 +1,6 @@
 import datetime
 from tkinter import *
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 
 LETTERS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
            'q', 'w', 'e', 'r', 't', 'z', 'u', 'i', 'o', 'p',
@@ -57,6 +57,7 @@ class SpeedButton(Button):
         self.l = Label()
         self.s = Label()
 
+        self.window.protocol("WM_DELETE_WINDOW", self.onClosing)
         self.window.pack_propagate(0)
         self.window.mainloop()
 
@@ -69,7 +70,9 @@ class SpeedButton(Button):
 
         self.l.pack()
         self.s.pack()
-
+    def onClosing(self):
+        self.active = False
+        self.window.destroy()
 
 class MainFrame(Frame):
     def __init__(self, window):
@@ -152,7 +155,6 @@ class StatisticsButton(Button):
             self.lines += s
             ind += 1
             line = file.readline()
-
 
 class Window(Tk):
     def __init__(self):
