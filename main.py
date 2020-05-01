@@ -57,8 +57,6 @@ class SpeedButton(Button):
         self.l = Label()
         self.s = Label()
 
-        self.update()
-
         self.window.pack_propagate(0)
         self.window.mainloop()
 
