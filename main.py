@@ -62,7 +62,7 @@ class SpeedButton(Button):
         self.window.pack_propagate(0)
         self.window.mainloop()
 
-    def update(self, accuracy="", speed=""):
+    def update(self, accuracy, speed):
         self.l.destroy()
         self.s.destroy()
 
@@ -209,6 +209,8 @@ class Window(Tk):
         self.ind = 0
         self.timer = datetime.datetime.now()
         self.start = datetime.datetime.now()
+        self.accuracy = 0
+        self.speed = 0
 
         self.textEntry.focus_set()
 
@@ -340,7 +342,7 @@ class Window(Tk):
         file.close()
 
         if self.header.speedButton.active:
-            self.header.speedButton.update()
+            self.header.speedButton.update(str(self.accuracy), str(self.speed))
 
     def updateStatistics(self):
         if (self.header.speedButton.active):
