@@ -247,7 +247,7 @@ class Window(Tk):
 
         sym = self.lines[self.ind]
         nextSym = self.lines[self.ind] + \
-            self.lines[(self.ind+1) % len(self.lines)]
+                  self.lines[(self.ind + 1) % len(self.lines)]
 
         if key not in LETTERS:
             return "break"
@@ -275,7 +275,7 @@ class Window(Tk):
 
         sym = self.lines[self.ind]
         nextSym = self.lines[self.ind] + \
-            self.lines[(self.ind+1) % len(self.lines)]
+                  self.lines[(self.ind + 1) % len(self.lines)]
 
         if key not in LETTERS:
             return "break"
@@ -298,9 +298,9 @@ class Window(Tk):
         y = int(sp[0])
         x = int(sp[1])
         if not up:
-            self.textEntry.mark_set("insert", "%d.%d" % (y, x+1))
+            self.textEntry.mark_set("insert", "%d.%d" % (y, x + 1))
         else:
-            self.textEntry.mark_set("insert", "%d.%d" % (y+1, 0))
+            self.textEntry.mark_set("insert", "%d.%d" % (y + 1, 0))
 
         self.highlight()
 
@@ -319,7 +319,7 @@ class Window(Tk):
             x = int(sp[1])
 
             self.textEntry.tag_add("FAILURE", "%d.%d" %
-                                   (y, x), "%d.%d" % (y, x+1))
+                                   (y, x), "%d.%d" % (y, x + 1))
             self.mainFrame.configure(bg="red")
 
     def endGame(self):
