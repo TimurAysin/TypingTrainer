@@ -70,9 +70,11 @@ class SpeedButton(Button):
 
         self.l.pack()
         self.s.pack()
+
     def onClosing(self):
         self.active = False
         self.window.destroy()
+
 
 class MainFrame(Frame):
     def __init__(self, window):
@@ -155,6 +157,7 @@ class StatisticsButton(Button):
             self.lines += s
             ind += 1
             line = file.readline()
+
 
 class Window(Tk):
     def __init__(self):
